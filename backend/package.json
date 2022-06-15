@@ -4,7 +4,8 @@
   "description": "api manga",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "ts": "tsc -w "
   },
   "repository": {
     "type": "git",
