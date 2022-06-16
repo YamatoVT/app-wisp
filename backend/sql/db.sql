@@ -1,6 +1,6 @@
 CREATE TABLE tpersona(
     id_persona SERIAl,
-    dni unique NOT NULL,
+    dni character varying(20) UNIQUE NOT NULL,
     nombres_persona character varying(140) NOT NULL,
     apellidos_persona character varying(140) NOT NULL,
     constraint PK_id_persona_tpersona primary key(id_persona)
@@ -32,7 +32,7 @@ CREATE TABLE tplan(
     cantidad INTEGER NOT NULL, -- numero 1, 5, 10
     velocidad character varying(5) NOT NULL, -- KB, MB, GB
     disponibulidad_plan character(1) NOT NULL, -- 1 o 0
-    constraint PK_id_plan_tplan primary key() NOT NULL
+    constraint PK_id_plan_tplan primary key(id_plan)
 );
 
 CREATE TABLE tprecio_plan(
