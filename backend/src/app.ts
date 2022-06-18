@@ -12,5 +12,9 @@ app.set("puerto",puerto)
 app.use(cors())
 app.use(logger("dev"))
 app.use(express.static(__dirname+"/upload"))
+// rutas 
+import RouterIp from "./rutas/ip/index"
+
+app.use("/configuracion/ip",RouterIp)
 // export
 export = app

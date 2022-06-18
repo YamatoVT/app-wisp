@@ -1,11 +1,21 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const pg_1 = require("pg");
 const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
+const path_1 = __importDefault(require("path"));
+dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../.env') });
 class PostgreSql {
     constructor() {
         this.host = process.env.DB_HOST;
@@ -20,6 +30,28 @@ class PostgreSql {
             user: this.user,
             password: this.db
         };
-        let configPool = new pg_1.Pool(this.config);
+        this.pool = new pg_1.Pool(this.config);
+    }
+    conectar() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let cliente = yield this.pool.connect();
+            return cliente;
+        });
+    }
+    query(SQL) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.cliente === undefined) {
+                console.log("solo puede entrar una sola vez");
+                this.cliente = yield this.conectar();
+            }
+            let result = yield this.cliente.query(SQL);
+            this.cliente.release();
+            this.cerrarConexion();
+            return result;
+        });
+    }
+    cerrarConexion() {
+        this.pool.end();
     }
 }
+exports.default = PostgreSql;

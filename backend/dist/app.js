@@ -15,4 +15,7 @@ app.set("puerto", puerto);
 app.use((0, cors_1.default)());
 app.use((0, morgan_1.default)("dev"));
 app.use(express_1.default.static(__dirname + "/upload"));
+// rutas 
+const index_1 = __importDefault(require("./rutas/ip/index"));
+app.use("/configuracion/ip", index_1.default);
 module.exports = app;

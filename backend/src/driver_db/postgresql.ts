@@ -1,7 +1,8 @@
 import DriverInterfaz from "../interfaz/driver_db"
-import {Pool} from "pg"
+import {Pool, PoolClient, QueryResult} from "pg"
 import dotEnv from "dotenv"
-dotEnv.config()
+import path from "path"
+dotEnv.config({ path: path.resolve(__dirname, '../.env') })
 
 class PostgreSql implements DriverInterfaz{
 
@@ -11,6 +12,7 @@ class PostgreSql implements DriverInterfaz{
     user: string
     pass: string
     config: Object
+    pool: Pool
 
     constructor(){
         this.host=process.env.DB_HOST as string
@@ -25,7 +27,27 @@ class PostgreSql implements DriverInterfaz{
             user: this.user,
             password: this.db
         }
-        let configPool=new Pool(this.config)
+        this.pool=new Pool(this.config)
+    }
+    
+
+    async conectar():Promise<PoolClient>{
+        let cliente:PoolClient= await this.pool.connect()
+        return cliente
+    }
+
+    async query(SQL:string):Promise<QueryResult>{
+        let cliente:PoolClient=await this.conectar()
+        let result:QueryResult=await cliente.query(SQL)
+        cliente.release()
+        this.cerrarConexion()
+        return result
+    }
+    
+    cerrarConexion(){
+        this.pool.end()
     }
 
 }
+
+export default PostgreSql
