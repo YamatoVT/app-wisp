@@ -25,7 +25,7 @@ class ModeloIp {
     registrar() {
         return __awaiter(this, void 0, void 0, function* () {
             let SQL = "INSERT INTO tip(ip,disponibulidad_ip) VALUES('" + this.ip + "','" + this.disponibulidad_ip + "') RETURNING id_ip";
-            return yield this.drivePostgreSql.query(SQL, this.cliente);
+            return yield this.drivePostgreSql.query(this.cliente, SQL);
         });
     }
 }

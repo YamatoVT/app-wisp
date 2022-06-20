@@ -28,7 +28,7 @@ class ModeloIp implements interfaz_modelo_ip {
 
     async registrar():Promise<QueryResult>{
         let SQL:string="INSERT INTO tip(ip,disponibulidad_ip) VALUES('"+this.ip+"','"+this.disponibulidad_ip+"') RETURNING id_ip"
-        return await this.drivePostgreSql.query(SQL,this.cliente)
+        return await this.drivePostgreSql.query(this.cliente,SQL)
     }
 
 

@@ -15,24 +15,23 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const postgresql_1 = __importDefault(require("../driver_db/postgresql"));
 const modelo_ip_1 = __importDefault(require("../modelos/modelo_ip"));
 let ControladorIp = {
-    test: function (req, res) {
+    test: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        let DriverPostgreSql = new postgresql_1.default();
+        let cliente = yield DriverPostgreSql.conectar();
+        let modeloIp = new modelo_ip_1.default(DriverPostgreSql, cliente);
+        res.type("json");
+        res.status(200).json({ msj: "hola" });
+        res.end();
+    }),
+    registrar: function (req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let DriverPostgreSql = new postgresql_1.default();
-            let cliente = yield DriverPostgreSql.conectar();
-            let modeloIp = new modelo_ip_1.default(DriverPostgreSql, cliente);
-            let ip = {
-                id_ip: "",
-                ip: "192.168.1.0",
-                disponibulidad_ip: "1"
-            };
-            modeloIp.setDatos(ip);
-            let result = yield modeloIp.registrar();
-            console.log("datos =>>> ", result);
-            DriverPostgreSql.cerrarConexion(cliente);
-            res.writeHead(200, { "Content-Type": "Application/json" });
-            res.write(JSON.stringify({ "msj": "hola" }));
-            res.end();
         });
-    }
+    },
+    consultar: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    }),
+    consultarTodos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    }),
+    actualizar: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    })
 };
 exports.default = ControladorIp;
