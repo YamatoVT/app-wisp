@@ -18,19 +18,34 @@ const path_1 = __importDefault(require("path"));
 dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../.env') });
 class PostgreSql {
     constructor() {
-        this.host = process.env.DB_HOST;
-        this.port = process.env.DB_PORT;
-        this.db = process.env.DB;
-        this.user = process.env.DB_USER;
-        this.pass = process.env.DB_CLAVE;
+        this.host = (process.env.DB_HOST) ? process.env.DB_HOST : "";
+        this.port = (process.env.DB_PORT) ? process.env.DB_PORT : "";
+        this.db_name = (process.env.DB_NAME) ? process.env.DB_NAME : "";
+        this.user = (process.env.DB_USER) ? process.env.DB_USER : "";
+        this.pass = (process.env.DB_PASS) ? process.env.DB_PASS : "";
         this.config = {
             host: this.host,
             port: this.port,
-            database: this.db,
+            database: this.db_name,
             user: this.user,
-            password: this.db
+            password: this.pass
         };
         this.pool = new pg_1.Pool(this.config);
+    }
+    setHost(host_) {
+        this.host = host_;
+    }
+    setPort(port_) {
+        this.port = port_;
+    }
+    setDBame(db_name_) {
+        this.db_name = db_name_;
+    }
+    setUser(user_) {
+        this.user = user_;
+    }
+    setPass(pass_) {
+        this.pass = pass_;
     }
     conectar() {
         return __awaiter(this, void 0, void 0, function* () {

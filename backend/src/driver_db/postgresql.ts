@@ -8,26 +8,46 @@ class PostgreSql implements DriverInterfaz{
 
     host: string
     port: string
-    db: string
+    db_name: string
     user: string
     pass: string
     config: Object
     pool: Pool
 
     constructor(){
-        this.host=process.env.DB_HOST as string
-        this.port=process.env.DB_PORT as string
-        this.db=process.env.DB as string
-        this.user=process.env.DB_USER as string
-        this.pass=process.env.DB_CLAVE as string
+        this.host=(process.env.DB_HOST)? process.env.DB_HOST as string: ""
+        this.port=(process.env.DB_PORT)? process.env.DB_PORT as string: ""
+        this.db_name=(process.env.DB_NAME)? process.env.DB_NAME as string: ""
+        this.user=(process.env.DB_USER)? process.env.DB_USER as string: ""
+        this.pass=(process.env.DB_PASS)? process.env.DB_PASS as string: ""
         this.config={
             host: this.host,
             port: this.port,
-            database: this.db,
+            database: this.db_name,
             user: this.user,
-            password: this.db
+            password: this.pass
         }
         this.pool=new Pool(this.config)
+    }
+
+    setHost(host_:string){
+        this.host=host_
+    }
+
+    setPort(port_:string){
+        this.port=port_
+    }
+
+    setDBame(db_name_:string){
+        this.db_name=db_name_
+    }
+
+    setUser(user_:string){
+        this.user=user_
+    }
+
+    setPass(pass_:string){
+        this.pass=pass_
     }
     
 
