@@ -8,17 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const postgresql_1 = __importDefault(require("../driver_db/postgresql"));
-class ModeloIp extends postgresql_1.default {
-    constructor() {
-        super();
+class ModeloIp {
+    constructor(drivePostgreSql_, cliente_) {
         this.id_ip = "";
         this.ip = "";
         this.disponibulidad_ip = "";
+        this.drivePostgreSql = drivePostgreSql_;
+        this.cliente = cliente_;
     }
     setDatos(datos) {
         this.id_ip = datos.id_ip;
@@ -27,8 +24,8 @@ class ModeloIp extends postgresql_1.default {
     }
     registrar() {
         return __awaiter(this, void 0, void 0, function* () {
-            let SQL = "INSERT INTO tip(ip,disponibulidad_ip) VALUES('" + this.ip + "','" + this.disponibulidad_ip + "')";
-            return yield this.query(SQL);
+            let SQL = "INSERT INTO tip(ip,disponibulidad_ip) VALUES('" + this.ip + "','" + this.disponibulidad_ip + "') RETURNING id_ip";
+            return yield this.drivePostgreSql.query(SQL, this.cliente);
         });
     }
 }

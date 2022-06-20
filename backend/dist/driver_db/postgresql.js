@@ -38,20 +38,18 @@ class PostgreSql {
             return cliente;
         });
     }
-    query(SQL) {
+    query(SQL, cliente) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.cliente === undefined) {
-                console.log("solo puede entrar una sola vez");
-                this.cliente = yield this.conectar();
-            }
-            let result = yield this.cliente.query(SQL);
-            this.cliente.release();
-            this.cerrarConexion();
+            let result = yield cliente.query(SQL);
+            // cliente.release()
             return result;
         });
     }
-    cerrarConexion() {
-        this.pool.end();
+    cerrarConexion(cliente) {
+        return __awaiter(this, void 0, void 0, function* () {
+            cliente.release();
+            this.pool.end();
+        });
     }
 }
 exports.default = PostgreSql;

@@ -36,15 +36,14 @@ class PostgreSql implements DriverInterfaz{
         return cliente
     }
 
-    async query(SQL:string):Promise<QueryResult>{
-        let cliente:PoolClient=await this.conectar()
+    async query(SQL:string,cliente:PoolClient):Promise<QueryResult>{
         let result:QueryResult=await cliente.query(SQL)
-        cliente.release()
-        this.cerrarConexion()
+        // cliente.release()
         return result
     }
     
-    cerrarConexion(){
+    async cerrarConexion(cliente:PoolClient):Promise<void>{
+        cliente.release()
         this.pool.end()
     }
 

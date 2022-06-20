@@ -1,8 +1,9 @@
 import express from "express"
+import path from "path"
 import cors from "cors"
 import logger from "morgan"
 import dotEnv from "dotenv"
-dotEnv.config()
+dotEnv.config({ path: path.resolve(__dirname, '../.env') })
 
 let app=express()
 const puerto = process.env.PORT || 5000
