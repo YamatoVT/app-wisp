@@ -53,10 +53,9 @@ class PostgreSql {
             return cliente;
         });
     }
-    query(cliente, SQL) {
+    query(cliente, SQL, datos) {
         return __awaiter(this, void 0, void 0, function* () {
             let result = yield cliente.query(SQL);
-            // cliente.release()
             return result;
         });
     }

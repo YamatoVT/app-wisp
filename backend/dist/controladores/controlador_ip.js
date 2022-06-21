@@ -13,18 +13,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const postgresql_1 = __importDefault(require("../driver_db/postgresql"));
-const modelo_ip_1 = __importDefault(require("../modelos/modelo_ip"));
 let ControladorIp = {
-    test: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        let DriverPostgreSql = new postgresql_1.default();
-        let cliente = yield DriverPostgreSql.conectar();
-        let modeloIp = new modelo_ip_1.default(DriverPostgreSql, cliente);
-        res.type("json");
-        res.status(200).json({ msj: "hola" });
-        res.end();
-    }),
     registrar: function (req, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            const DRIVER_POSTGRESQL = new postgresql_1.default();
+            const CLIENTE = yield DRIVER_POSTGRESQL.conectar();
+            let { datos_cliente } = req.body;
+            /*
+            const IPS:Object[] = datos_cliente.ips
+            for (const IP of IPS) {
+                const IP_NO_ECONTRADA:boolean=false
+                let modeloIp: ModeloIp = new ModeloIp(DRIVER_POSTGRESQL,CLIENTE)
+                modeloIp.setDatos(IP)
+                let ipEncontrada:boolean=await this.validarDisponivilidadIp(modeloIp)
+                if(ipEncontrada == IP_NO_ECONTRADA){
+    
+                }
+                else{
+                    
+                }
+            }
+            */
         });
     },
     consultar: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -32,6 +41,32 @@ let ControladorIp = {
     consultarTodos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }),
     actualizar: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    }),
+    generarIps: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        let { datos_cliente } = req.body;
+        let { ip_parte_1, ip_parte_2, host, desde, hasta } = datos_cliente;
+        let fin = hasta;
+        let listaIP = [];
+        for (let contador = desde; contador <= fin; contador++) {
+            let ip = ip_parte_1 + "." + ip_parte_2 + "." + host + "." + contador;
+            listaIP.push(ip);
+        }
+        res.type("json");
+        res.status(200).json({ listaIP });
+    }),
+    validarDisponivilidadIps: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    }),
+    validarDisponivilidadIp: (modeloIp) => __awaiter(void 0, void 0, void 0, function* () {
+        let result = yield modeloIp.consultarPorId();
+        return (result.rowCount > 0) ? true : false;
+    }),
+    validarExitenciaIps: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    }),
+    validarExitenciaIp: (modeloIp) => __awaiter(void 0, void 0, void 0, function* () {
+        let result = yield modeloIp.consultarPorIp();
+        return (result.rowCount > 0) ? true : false;
+    }),
+    obtenerContratoPorIp: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     })
 };
 exports.default = ControladorIp;

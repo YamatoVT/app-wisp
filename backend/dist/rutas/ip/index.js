@@ -7,5 +7,5 @@ const express_1 = require("express");
 // controladores
 const controlador_ip_1 = __importDefault(require("../../controladores/controlador_ip"));
 let router = (0, express_1.Router)();
-router.get("/test", controlador_ip_1.default.test);
+router.post("/generar-ip", controlador_ip_1.default.generarIps);
 exports.default = router;

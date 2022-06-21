@@ -12,6 +12,7 @@ app.set("puerto",puerto)
 // middleware
 app.use(cors())
 app.use(logger("dev"))
+app.use(express.json())
 app.use(express.static(__dirname+"/upload"))
 // rutas 
 import RouterIp from "./rutas/ip/index"

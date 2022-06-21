@@ -10,11 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 class ModeloIp {
-    constructor(drivePostgreSql_, cliente_) {
+    constructor(DrivePostgreSql_, cliente_) {
         this.id_ip = "";
         this.ip = "";
         this.disponibulidad_ip = "";
-        this.drivePostgreSql = drivePostgreSql_;
+        this.DrivePostgreSql = DrivePostgreSql_;
         this.cliente = cliente_;
     }
     setDatos(datos) {
@@ -25,7 +25,25 @@ class ModeloIp {
     registrar() {
         return __awaiter(this, void 0, void 0, function* () {
             let SQL = "INSERT INTO tip(ip,disponibulidad_ip) VALUES('" + this.ip + "','" + this.disponibulidad_ip + "') RETURNING id_ip";
-            return yield this.drivePostgreSql.query(this.cliente, SQL);
+            return yield this.DrivePostgreSql.query(this.cliente, SQL);
+        });
+    }
+    consultarPorIp() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const SQL = "SELECT * FROM tip WHERE ip='" + this.ip + "'";
+            return yield this.DrivePostgreSql.query(this.cliente, SQL);
+        });
+    }
+    consultarPorId() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const SQL = "SELECT * FROM tip WHERE ip=" + this.id_ip + " AND disponibulidad_ip='1';";
+            return yield this.DrivePostgreSql.query(this.cliente, SQL);
+        });
+    }
+    resetiarIdTabla() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const SQL = "ALTER SEQUENCE tip_id_ip_seq RESTART WITH 1;";
+            return yield this.DrivePostgreSql.query(this.cliente, SQL);
         });
     }
 }

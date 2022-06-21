@@ -9,14 +9,14 @@ class ModeloIp implements interfaz_modelo_ip {
     id_ip:string
     ip:string
     disponibulidad_ip:string
-    drivePostgreSql:PostgreSql
+    DrivePostgreSql:PostgreSql
     cliente:PoolClient
 
-    constructor(drivePostgreSql_:PostgreSql,cliente_:PoolClient){
+    constructor(DrivePostgreSql_:PostgreSql,cliente_:PoolClient){
         this.id_ip=""
         this.ip=""
         this.disponibulidad_ip=""
-        this.drivePostgreSql=drivePostgreSql_
+        this.DrivePostgreSql=DrivePostgreSql_
         this.cliente=cliente_
     }
 
@@ -28,7 +28,22 @@ class ModeloIp implements interfaz_modelo_ip {
 
     async registrar():Promise<QueryResult>{
         let SQL:string="INSERT INTO tip(ip,disponibulidad_ip) VALUES('"+this.ip+"','"+this.disponibulidad_ip+"') RETURNING id_ip"
-        return await this.drivePostgreSql.query(this.cliente,SQL)
+        return await this.DrivePostgreSql.query(this.cliente,SQL)
+    }
+
+    async consultarPorIp(){
+        const SQL:string="SELECT * FROM tip WHERE ip='"+this.ip+"'"
+        return await this.DrivePostgreSql.query(this.cliente,SQL)
+    }
+
+    async consultarPorId(){
+        const SQL:string="SELECT * FROM tip WHERE ip="+this.id_ip+" AND disponibulidad_ip='1';"
+        return await this.DrivePostgreSql.query(this.cliente,SQL)
+    }
+
+    async resetiarIdTabla(){
+        const SQL:string="ALTER SEQUENCE tip_id_ip_seq RESTART WITH 1;"
+        return await this.DrivePostgreSql.query(this.cliente,SQL)
     }
 
 
