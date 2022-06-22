@@ -1,3 +1,5 @@
+CREATE DATABASE wisp_db;
+
 CREATE TABLE tpersona(
     id_persona SERIAl,
     dni character varying(20) UNIQUE NOT NULL,
@@ -22,7 +24,7 @@ CREATE TABLE tcliente(
 CREATE TABLE tip(
     id_ip SERIAL,
     ip character varying(15) NOT NULL, -- 192.168.1.100 o 192.168.100.100
-    disponibulidad_ip character(1) NOT NULL, -- 1 o 0
+    disponibilidad_ip character(1) NOT NULL, -- 1 o 0
     constraint PK_id_ip_tip primary key(id_ip)
 );
 
@@ -31,7 +33,7 @@ CREATE TABLE tplan(
     nombres_plan character varying(140) NOT NULL,
     cantidad INTEGER NOT NULL, -- numero 1, 5, 10
     velocidad character varying(5) NOT NULL, -- KB, MB, GB
-    disponibulidad_plan character(1) NOT NULL, -- 1 o 0
+    Disponibilidad_plan character(1) NOT NULL, -- 1 o 0
     constraint PK_id_plan_tplan primary key(id_plan)
 );
 
