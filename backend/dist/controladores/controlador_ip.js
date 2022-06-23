@@ -18,22 +18,38 @@ let ControladorIp = {
     registrar: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const DRIVER_POSTGRESQL = new postgresql_1.default();
         const CLIENTE = yield DRIVER_POSTGRESQL.conectar();
-        let { datos_cliente } = req.body;
-        /*
-        const IPS:Object[] = datos_cliente.ips
-        for (const IP of IPS) {
-            const IP_NO_ECONTRADA:boolean=false
-            let modeloIp: ModeloIp = new ModeloIp(DRIVER_POSTGRESQL,CLIENTE)
-            modeloIp.setDatos(IP)
-            let ipEncontrada:boolean=await this.validarDisponivilidadIp(modeloIp)
-            if(ipEncontrada == IP_NO_ECONTRADA){
-
+        let estidoRegistro = true;
+        const ERROR = false;
+        const OK = true;
+        let { lista_ips } = req.body;
+        for (const MODELO_IP of lista_ips) {
+            let resul = yield MODELO_IP.registrar();
+            if (resul.rowCount == 1) {
+                estidoRegistro = true;
             }
-            else{
-                
+            else {
+                estidoRegistro = false;
+                break;
             }
         }
-        */
+        if (estidoRegistro === OK) {
+            let respuesta = {
+                codigo_respuesta: "200",
+                tipo_mensaje: "success",
+                mensaje_respuesta: "registro completado"
+            };
+            res.type("json");
+            res.status(200).json(respuesta);
+        }
+        if (estidoRegistro === ERROR) {
+            let respuesta = {
+                codigo_respuesta: "500",
+                tipo_mensaje: "danger",
+                mensaje_respuesta: "sucedio un error consulte a sistema"
+            };
+            res.type("json");
+            res.status(500).json(respuesta);
+        }
     }),
     consultar: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }),
@@ -59,6 +75,32 @@ let ControladorIp = {
     //     return (result.rowCount>0)? true: false
     // },
     validarExistenciaIpsEndPointNext: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+        const DRIVER_POSTGRESQL = new postgresql_1.default();
+        const CLIENTE = yield DRIVER_POSTGRESQL.conectar();
+        let { lista_ips } = req.body;
+        let LISTA_IP = lista_ips.map((direccion_ip) => {
+            const MODELO_IP = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
+            MODELO_IP.setIp = direccion_ip;
+            return MODELO_IP;
+        });
+        let { LISTA_IP_EXISTENTES, LISTA_IP_NO_EXISTENTES, LISTA_IP_2 } = yield ControladorIp.validarExistenciaIps(LISTA_IP);
+        const CANTIDAD_PERMITIDA = 0;
+        if (LISTA_IP_EXISTENTES.length == CANTIDAD_PERMITIDA) {
+            req.body.lista_ips = LISTA_IP_2;
+            next();
+        }
+        else {
+            res.type("json");
+            let respuesta = {
+                codigo_respuesta: "200",
+                tipo_mensaje: "warning",
+                mensaje_respuesta: "no se pudo procesar su solicitud de registro por el siguiente motivo, no se pueden volver a registrar ips que ya estan registrar",
+                datos_respuesta: {
+                    lista_ip_existentes: LISTA_IP_EXISTENTES,
+                }
+            };
+            res.status(200).json(respuesta);
+        }
     }),
     validarExistenciaIpsEndPoint: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const DRIVER_POSTGRESQL = new postgresql_1.default();
@@ -72,10 +114,18 @@ let ControladorIp = {
         let { LISTA_IP_EXISTENTES, LISTA_IP_NO_EXISTENTES, LISTA_IP_2 } = yield ControladorIp.validarExistenciaIps(LISTA_IP);
         LISTA_IP = LISTA_IP_2;
         res.type("json");
-        res.status(200).json({
-            LISTA_IP_EXISTENTES,
-            LISTA_IP_NO_EXISTENTES
-        });
+        let respuesta = {
+            codigo_respuesta: "200",
+            tipo_mensaje: "success",
+            mensaje_respuesta: "soliciudad porcesada con exito",
+            datos_respuesta: {
+                lista_ip_existentes: LISTA_IP_EXISTENTES,
+                lista_ip_no_existentes: LISTA_IP_NO_EXISTENTES,
+                total_ip_existente: LISTA_IP_EXISTENTES.length,
+                total_ip_no_existente: LISTA_IP_NO_EXISTENTES.length
+            }
+        };
+        res.status(200).json(respuesta);
     }),
     validarExistenciaIps: (LISTA_IP) => __awaiter(void 0, void 0, void 0, function* () {
         const LISTA_IP_EXISTENTES = [];
@@ -91,8 +141,6 @@ let ControladorIp = {
             else {
                 LISTA_IP_NO_EXISTENTES.push(MODELO_IP.getIp);
             }
-            console.log(MODELO_IP);
-            console.log(LISTA_IP[contador]);
         }
         return {
             LISTA_IP_EXISTENTES,
