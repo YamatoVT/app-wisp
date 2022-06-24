@@ -12,5 +12,5 @@ router.post("/validar-exitencia-ips", controlador_ip_1.default.validarExistencia
 router.post("/registrar", controlador_ip_1.default.validarExistenciaIpsEndPointNext, controlador_ip_1.default.registrar);
 router.get("/consultar/:id", controlador_ip_1.default.consultarEndPoint);
 router.get("/consultar-todos", controlador_ip_1.default.consultarTodosEndPoint);
-// router.put("/actualizar/:id",ControladorIp.actualizarDireccion)
+router.put("/actualizar-direccion/:id", controlador_ip_1.default.consultarEndPointNext, controlador_ip_1.default.actualizarDireccion);
 exports.default = router;

@@ -55,6 +55,13 @@ class ModeloIp {
             return yield this.DrivePostgreSql.query(this.cliente, SQL, datos);
         });
     }
+    actualizarDireccion() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let SQL = "UPDATE tip SET ip=$1 WHERE id_ip=$2";
+            let datos = [this.ip, this.id_ip];
+            return yield this.DrivePostgreSql.query(this.cliente, SQL, datos);
+        });
+    }
     consultarPorIp() {
         return __awaiter(this, void 0, void 0, function* () {
             const SQL = `SELECT * FROM tip WHERE ip=$1;`;
