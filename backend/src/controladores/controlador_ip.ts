@@ -9,12 +9,10 @@ import interfaz_respuesta_servidor from "../interfaz/interfaz_respuesta_servidor
 let ControladorIp={
 
     registrar: async (req:Request,res:Response) => {
-        const DRIVER_POSTGRESQL:PostgreSql= new PostgreSql()
-        const CLIENTE:PoolClient = await DRIVER_POSTGRESQL.conectar()
         let estidoRegistro:boolean=true
         const ERROR:boolean=false
         const OK:boolean=true
-        let {lista_ips} = req.body
+        let {lista_ips,DRIVER_POSTGRESQL,CLIENTE} = req.body
         for (const MODELO_IP of lista_ips) {
             let resul:QueryResult=await MODELO_IP.registrar()
             if(resul.rowCount==1){
@@ -25,6 +23,7 @@ let ControladorIp={
                 break
             }
         }
+        await DRIVER_POSTGRESQL.cerrarConexion(CLIENTE)
         if(estidoRegistro===OK){
             let respuesta:interfaz_respuesta_servidor={
                 codigo_respuesta:"200",
@@ -45,16 +44,127 @@ let ControladorIp={
         }
     },
 
-    consultar: async (req:Request,res:Response) => {
-
+    consultarEndPoint: async (req:Request,res:Response) => {
+        const {id} = req.params
+        const DRIVER_POSTGRESQL:PostgreSql=new PostgreSql()
+        const CLIENTE:PoolClient=await DRIVER_POSTGRESQL.conectar()
+        let ip:ModeloIp[]=await ControladorIp.consultar(id,DRIVER_POSTGRESQL,CLIENTE)
+        await DRIVER_POSTGRESQL.cerrarConexion(CLIENTE)
+        if(ip.length>0){
+            let respuesta:interfaz_respuesta_servidor={
+                codigo_respuesta:"200",
+                tipo_mensaje:"success",
+                mensaje_respuesta:"consulta completada",
+                datos_respuesta:ip[0].getDatos
+            }
+            res.type("json")
+            res.status(200).json(respuesta)
+        }
+        else{
+            let respuesta:interfaz_respuesta_servidor={
+                codigo_respuesta:"417",
+                tipo_mensaje:"danger",
+                mensaje_respuesta:"no hay ips registras en la base de datos",
+            }
+            res.type("json")
+            res.status(417).json(respuesta)
+        }
     },
 
-    consultarTodos: async (req:Request,res:Response) => {
+    consultar: async (id:string,DRIVER_POSTGRESQL:PostgreSql,CLIENTE:PoolClient) => {
+        let datos:ModeloIp[]=[]
+        let modeloIp:ModeloIp=new ModeloIp(DRIVER_POSTGRESQL,CLIENTE)
+        modeloIp.setIdIp=(id as unknown) as number
+        let result:QueryResult=await modeloIp.consultarPorId()
+        if(result.rowCount>0){
+            for (const row of result.rows) {
+                let datos_ip:interfaz_modelo_ip={
+                    id_ip:row.id_ip,
+                    ip:row.ip,
+                    disponibilidad_ip:row.disponibilidad_ip
+                }
+                const MODELO_IP:ModeloIp=new ModeloIp(DRIVER_POSTGRESQL,CLIENTE)
+                MODELO_IP.setDatos=datos_ip
+                datos.push(MODELO_IP)
+                
+            }
+        }
+        return datos
+    },
 
+    consultarTodosEndPoint: async (req:Request,res:Response) => {
+        const DRIVER_POSTGRESQL:PostgreSql=new PostgreSql()
+        const CLIENTE:PoolClient=await DRIVER_POSTGRESQL.conectar()
+        let lista_ips:ModeloIp[]=await ControladorIp.consultarTodos(DRIVER_POSTGRESQL,CLIENTE)
+        await DRIVER_POSTGRESQL.cerrarConexion(CLIENTE)
+        if(lista_ips.length>0){
+            let respuesta:interfaz_respuesta_servidor={
+                codigo_respuesta:"200",
+                tipo_mensaje:"success",
+                mensaje_respuesta:"consulta completada",
+                datos_respuesta:lista_ips.map(ip => ip.getDatos)
+            }
+            res.type("json")
+            res.status(200).json(respuesta)
+        }
+        else{
+            let respuesta:interfaz_respuesta_servidor={
+                codigo_respuesta:"417",
+                tipo_mensaje:"danger",
+                mensaje_respuesta:"no hay ips registras en la base de datos",
+            }
+            res.type("json")
+            res.status(417).json(respuesta)
+        }
+    },
+
+    consultarTodos: async (DRIVER_POSTGRESQL:PostgreSql,CLIENTE:PoolClient) => {
+        let datos:ModeloIp[]=[]
+        let modeloIp:ModeloIp=new ModeloIp(DRIVER_POSTGRESQL,CLIENTE)
+        let result:QueryResult=await modeloIp.consultarTodo()
+        if(result.rowCount>0){
+            for (const row of result.rows) {
+                let datos_ip:interfaz_modelo_ip={
+                    id_ip:row.id_ip,
+                    ip:row.ip,
+                    disponibilidad_ip:row.disponibilidad_ip
+                }
+                const MODELO_IP:ModeloIp=new ModeloIp(DRIVER_POSTGRESQL,CLIENTE)
+                MODELO_IP.setDatos=datos_ip
+                datos.push(MODELO_IP)
+            }
+        }
+        return datos
     },
 
     actualizarDireccion:async (req:Request,res:Response) => {
-
+        // const {id} = req.params
+        // const {id} = req.body
+        const DRIVER_POSTGRESQL:PostgreSql=new PostgreSql()
+        const CLIENTE:PoolClient=await DRIVER_POSTGRESQL.conectar()
+        const MODELO_IP:ModeloIp=new ModeloIp(DRIVER_POSTGRESQL,CLIENTE)
+        // MODELO_IP.setIdIp=id
+        let result:QueryResult=await MODELO_IP.consultarTodo()
+        await DRIVER_POSTGRESQL.cerrarConexion(CLIENTE)
+        if(result.rowCount>0){
+            let respuesta:interfaz_respuesta_servidor={
+                codigo_respuesta:"200",
+                tipo_mensaje:"success",
+                mensaje_respuesta:"consulta completada",
+                datos_respuesta:result.rows
+            }
+            res.type("json")
+            res.status(200).json(respuesta)
+        }
+        else{
+            let respuesta:interfaz_respuesta_servidor={
+                codigo_respuesta:"417",
+                tipo_mensaje:"danger",
+                mensaje_respuesta:"no hay ips registras en la base de datos",
+            }
+            res.type("json")
+            res.status(417).json(respuesta)
+        }
     },
 
     generarIps: async (req:Request,res:Response) => {
@@ -88,9 +198,12 @@ let ControladorIp={
             return MODELO_IP
         })
         let {LISTA_IP_EXISTENTES, LISTA_IP_NO_EXISTENTES, LISTA_IP_2}  = await ControladorIp.validarExistenciaIps(LISTA_IP)
+        // await DRIVER_POSTGRESQL.cerrarConexion(CLIENTE)
         const CANTIDAD_PERMITIDA:number = 0
         if(LISTA_IP_EXISTENTES.length==CANTIDAD_PERMITIDA){
             req.body.lista_ips=LISTA_IP_2
+            req.body["DRIVER_POSTGRESQL"]=DRIVER_POSTGRESQL
+            req.body["CLIENTE"]=CLIENTE
             next()
         }
         else{
@@ -118,6 +231,7 @@ let ControladorIp={
             return MODELO_IP
         })
         let {LISTA_IP_EXISTENTES, LISTA_IP_NO_EXISTENTES, LISTA_IP_2} = await ControladorIp.validarExistenciaIps(LISTA_IP)
+        await DRIVER_POSTGRESQL.cerrarConexion(CLIENTE)
         LISTA_IP=LISTA_IP_2
         res.type("json")
         let respuesta:interfaz_respuesta_servidor={

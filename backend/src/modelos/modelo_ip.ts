@@ -6,31 +6,40 @@ import interfaz_modelo_ip from "../interfaz/modelo/interfaz_modelo_ip"
 
 class ModeloIp implements interfaz_modelo_ip {
 
-    id_ip:string
+    id_ip:number
     ip:string
     disponibilidad_ip:string
     DrivePostgreSql:PostgreSql
     cliente:PoolClient
 
     constructor(DrivePostgreSql_:PostgreSql,cliente_:PoolClient){
-        this.id_ip=""
+        this.id_ip=0
         this.ip=""
         this.disponibilidad_ip=""
         this.DrivePostgreSql=DrivePostgreSql_
         this.cliente=cliente_
     }
 
-    setDatos(ip:interfaz_modelo_ip):void{
+    set setDatos(ip:interfaz_modelo_ip){
         this.id_ip=ip.id_ip
         this.ip=ip.ip
         this.disponibilidad_ip=ip.disponibilidad_ip
     }
 
-    set setIdIp(id:string){
+    get getDatos():interfaz_modelo_ip{
+        let datos:interfaz_modelo_ip={
+            id_ip:this.id_ip,
+            ip:this.ip,
+            disponibilidad_ip:this.disponibilidad_ip
+        }
+        return datos
+    }
+
+    set setIdIp(id:number){
         this.id_ip=id
     }
 
-    get getIdIp():string{
+    get getIdIp():number{
         return this.id_ip
     }
 
@@ -51,20 +60,31 @@ class ModeloIp implements interfaz_modelo_ip {
     }
 
     async registrar():Promise<QueryResult>{
-        let SQL:string="INSERT INTO tip(ip,disponibilidad_ip) VALUES('"+this.ip+"','"+this.disponibilidad_ip+"') RETURNING id_ip"
-        return await this.DrivePostgreSql.query(this.cliente,SQL)
+        let SQL:string="INSERT INTO tip(ip,disponibilidad_ip) VALUES($1,'1') RETURNING id_ip"
+        let datos:string[]=[this.ip]
+        return await this.DrivePostgreSql.query(this.cliente,SQL,datos)
     }
 
     async consultarPorIp(){
-        // const SQL:string="SELECT * FROM tip WHERE ip='"+this.ip+"'"
         const SQL:string=`SELECT * FROM tip WHERE ip=$1;`
-        
         let datos:string[]=[this.ip]
         return await this.DrivePostgreSql.query(this.cliente,SQL,datos)
     }
 
     async consultarPorId(){
-        const SQL:string="SELECT * FROM tip WHERE ip="+this.id_ip+" AND disponibilidad_ip='1';"
+        const SQL:string="SELECT * FROM tip WHERE id_ip=$1;"
+        let datos:any[]=[this.id_ip]
+        return await this.DrivePostgreSql.query(this.cliente,SQL,datos)
+    }
+
+    async consultarPorIdYDisponibilidad(){
+        const SQL:string="SELECT * FROM tip WHERE id_ip=$1 AND disponibilidad_ip='1';"
+        let datos:any[]=[this.id_ip]
+        return await this.DrivePostgreSql.query(this.cliente,SQL,datos)
+    }
+
+    async consultarTodo(){
+        const SQL:string="SELECT * FROM tip;"
         return await this.DrivePostgreSql.query(this.cliente,SQL)
     }
 

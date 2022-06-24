@@ -55,8 +55,14 @@ class PostgreSql {
     }
     query(cliente, SQL, datos) {
         return __awaiter(this, void 0, void 0, function* () {
-            let result = yield cliente.query(SQL, datos);
-            return result;
+            if (datos) {
+                let result = yield cliente.query(SQL, datos);
+                return result;
+            }
+            else {
+                let result = yield cliente.query(SQL);
+                return result;
+            }
         });
     }
     cerrarConexion(cliente) {

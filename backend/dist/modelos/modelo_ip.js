@@ -11,16 +11,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 class ModeloIp {
     constructor(DrivePostgreSql_, cliente_) {
-        this.id_ip = "";
+        this.id_ip = 0;
         this.ip = "";
         this.disponibilidad_ip = "";
         this.DrivePostgreSql = DrivePostgreSql_;
         this.cliente = cliente_;
     }
-    setDatos(ip) {
+    set setDatos(ip) {
         this.id_ip = ip.id_ip;
         this.ip = ip.ip;
         this.disponibilidad_ip = ip.disponibilidad_ip;
+    }
+    get getDatos() {
+        let datos = {
+            id_ip: this.id_ip,
+            ip: this.ip,
+            disponibilidad_ip: this.disponibilidad_ip
+        };
+        return datos;
     }
     set setIdIp(id) {
         this.id_ip = id;
@@ -42,13 +50,13 @@ class ModeloIp {
     }
     registrar() {
         return __awaiter(this, void 0, void 0, function* () {
-            let SQL = "INSERT INTO tip(ip,disponibilidad_ip) VALUES('" + this.ip + "','" + this.disponibilidad_ip + "') RETURNING id_ip";
-            return yield this.DrivePostgreSql.query(this.cliente, SQL);
+            let SQL = "INSERT INTO tip(ip,disponibilidad_ip) VALUES($1,'1') RETURNING id_ip";
+            let datos = [this.ip];
+            return yield this.DrivePostgreSql.query(this.cliente, SQL, datos);
         });
     }
     consultarPorIp() {
         return __awaiter(this, void 0, void 0, function* () {
-            // const SQL:string="SELECT * FROM tip WHERE ip='"+this.ip+"'"
             const SQL = `SELECT * FROM tip WHERE ip=$1;`;
             let datos = [this.ip];
             return yield this.DrivePostgreSql.query(this.cliente, SQL, datos);
@@ -56,7 +64,21 @@ class ModeloIp {
     }
     consultarPorId() {
         return __awaiter(this, void 0, void 0, function* () {
-            const SQL = "SELECT * FROM tip WHERE ip=" + this.id_ip + " AND disponibilidad_ip='1';";
+            const SQL = "SELECT * FROM tip WHERE id_ip=$1;";
+            let datos = [this.id_ip];
+            return yield this.DrivePostgreSql.query(this.cliente, SQL, datos);
+        });
+    }
+    consultarPorIdYDisponibilidad() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const SQL = "SELECT * FROM tip WHERE id_ip=$1 AND disponibilidad_ip='1';";
+            let datos = [this.id_ip];
+            return yield this.DrivePostgreSql.query(this.cliente, SQL, datos);
+        });
+    }
+    consultarTodo() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const SQL = "SELECT * FROM tip;";
             return yield this.DrivePostgreSql.query(this.cliente, SQL);
         });
     }

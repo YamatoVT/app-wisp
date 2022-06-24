@@ -16,12 +16,10 @@ const postgresql_1 = __importDefault(require("../driver_db/postgresql"));
 const modelo_ip_1 = __importDefault(require("../modelos/modelo_ip"));
 let ControladorIp = {
     registrar: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        const DRIVER_POSTGRESQL = new postgresql_1.default();
-        const CLIENTE = yield DRIVER_POSTGRESQL.conectar();
         let estidoRegistro = true;
         const ERROR = false;
         const OK = true;
-        let { lista_ips } = req.body;
+        let { lista_ips, DRIVER_POSTGRESQL, CLIENTE } = req.body;
         for (const MODELO_IP of lista_ips) {
             let resul = yield MODELO_IP.registrar();
             if (resul.rowCount == 1) {
@@ -32,6 +30,7 @@ let ControladorIp = {
                 break;
             }
         }
+        yield DRIVER_POSTGRESQL.cerrarConexion(CLIENTE);
         if (estidoRegistro === OK) {
             let respuesta = {
                 codigo_respuesta: "200",
@@ -51,11 +50,122 @@ let ControladorIp = {
             res.status(500).json(respuesta);
         }
     }),
-    consultar: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    consultarEndPoint: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        const { id } = req.params;
+        const DRIVER_POSTGRESQL = new postgresql_1.default();
+        const CLIENTE = yield DRIVER_POSTGRESQL.conectar();
+        let ip = yield ControladorIp.consultar(id, DRIVER_POSTGRESQL, CLIENTE);
+        yield DRIVER_POSTGRESQL.cerrarConexion(CLIENTE);
+        if (ip.length > 0) {
+            let respuesta = {
+                codigo_respuesta: "200",
+                tipo_mensaje: "success",
+                mensaje_respuesta: "consulta completada",
+                datos_respuesta: ip[0].getDatos
+            };
+            res.type("json");
+            res.status(200).json(respuesta);
+        }
+        else {
+            let respuesta = {
+                codigo_respuesta: "417",
+                tipo_mensaje: "danger",
+                mensaje_respuesta: "no hay ips registras en la base de datos",
+            };
+            res.type("json");
+            res.status(417).json(respuesta);
+        }
     }),
-    consultarTodos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    consultar: (id, DRIVER_POSTGRESQL, CLIENTE) => __awaiter(void 0, void 0, void 0, function* () {
+        let datos = [];
+        let modeloIp = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
+        modeloIp.setIdIp = id;
+        let result = yield modeloIp.consultarPorId();
+        if (result.rowCount > 0) {
+            for (const row of result.rows) {
+                let datos_ip = {
+                    id_ip: row.id_ip,
+                    ip: row.ip,
+                    disponibilidad_ip: row.disponibilidad_ip
+                };
+                const MODELO_IP = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
+                MODELO_IP.setDatos = datos_ip;
+                datos.push(MODELO_IP);
+            }
+        }
+        return datos;
+    }),
+    consultarTodosEndPoint: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        const DRIVER_POSTGRESQL = new postgresql_1.default();
+        const CLIENTE = yield DRIVER_POSTGRESQL.conectar();
+        let lista_ips = yield ControladorIp.consultarTodos(DRIVER_POSTGRESQL, CLIENTE);
+        yield DRIVER_POSTGRESQL.cerrarConexion(CLIENTE);
+        if (lista_ips.length > 0) {
+            let respuesta = {
+                codigo_respuesta: "200",
+                tipo_mensaje: "success",
+                mensaje_respuesta: "consulta completada",
+                datos_respuesta: lista_ips.map(ip => ip.getDatos)
+            };
+            res.type("json");
+            res.status(200).json(respuesta);
+        }
+        else {
+            let respuesta = {
+                codigo_respuesta: "417",
+                tipo_mensaje: "danger",
+                mensaje_respuesta: "no hay ips registras en la base de datos",
+            };
+            res.type("json");
+            res.status(417).json(respuesta);
+        }
+    }),
+    consultarTodos: (DRIVER_POSTGRESQL, CLIENTE) => __awaiter(void 0, void 0, void 0, function* () {
+        let datos = [];
+        let modeloIp = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
+        let result = yield modeloIp.consultarTodo();
+        if (result.rowCount > 0) {
+            for (const row of result.rows) {
+                let datos_ip = {
+                    id_ip: row.id_ip,
+                    ip: row.ip,
+                    disponibilidad_ip: row.disponibilidad_ip
+                };
+                const MODELO_IP = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
+                MODELO_IP.setDatos = datos_ip;
+                datos.push(MODELO_IP);
+            }
+        }
+        return datos;
     }),
     actualizarDireccion: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        // const {id} = req.params
+        // const {id} = req.body
+        const DRIVER_POSTGRESQL = new postgresql_1.default();
+        const CLIENTE = yield DRIVER_POSTGRESQL.conectar();
+        const MODELO_IP = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
+        // MODELO_IP.setIdIp=id
+        let result = yield MODELO_IP.consultarTodo();
+        yield DRIVER_POSTGRESQL.cerrarConexion(CLIENTE);
+        if (result.rowCount > 0) {
+            let respuesta = {
+                codigo_respuesta: "200",
+                tipo_mensaje: "success",
+                mensaje_respuesta: "consulta completada",
+                datos_respuesta: result.rows
+            };
+            res.type("json");
+            res.status(200).json(respuesta);
+        }
+        else {
+            let respuesta = {
+                codigo_respuesta: "417",
+                tipo_mensaje: "danger",
+                mensaje_respuesta: "no hay ips registras en la base de datos",
+            };
+            res.type("json");
+            res.status(417).json(respuesta);
+        }
     }),
     generarIps: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const { ip_parte_1, ip_parte_2, host, desde, hasta } = req.body;
@@ -84,9 +194,12 @@ let ControladorIp = {
             return MODELO_IP;
         });
         let { LISTA_IP_EXISTENTES, LISTA_IP_NO_EXISTENTES, LISTA_IP_2 } = yield ControladorIp.validarExistenciaIps(LISTA_IP);
+        // await DRIVER_POSTGRESQL.cerrarConexion(CLIENTE)
         const CANTIDAD_PERMITIDA = 0;
         if (LISTA_IP_EXISTENTES.length == CANTIDAD_PERMITIDA) {
             req.body.lista_ips = LISTA_IP_2;
+            req.body["DRIVER_POSTGRESQL"] = DRIVER_POSTGRESQL;
+            req.body["CLIENTE"] = CLIENTE;
             next();
         }
         else {
@@ -112,6 +225,7 @@ let ControladorIp = {
             return MODELO_IP;
         });
         let { LISTA_IP_EXISTENTES, LISTA_IP_NO_EXISTENTES, LISTA_IP_2 } = yield ControladorIp.validarExistenciaIps(LISTA_IP);
+        yield DRIVER_POSTGRESQL.cerrarConexion(CLIENTE);
         LISTA_IP = LISTA_IP_2;
         res.type("json");
         let respuesta = {

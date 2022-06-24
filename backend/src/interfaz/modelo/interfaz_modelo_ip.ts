@@ -1,5 +1,5 @@
 interface interfaz_modelo_ip{
-    id_ip:string,
+    id_ip:number,
     ip:string,
     disponibilidad_ip:string
 }
