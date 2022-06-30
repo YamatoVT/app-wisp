@@ -4,6 +4,10 @@ import dotEnv from "dotenv"
 import path from "path"
 dotEnv.config({ path: path.resolve(__dirname, '../.env') })
 
+let {DB_HOST,DB_PORT,DB_NAME_PRO,DB_NAME_DEV,DB_USER,DB_PASS,NODE_ENV} = process.env
+
+let DB = (NODE_ENV==="test")? DB_NAME_DEV:DB_NAME_PRO
+
 class PostgreSql implements DriverInterfaz{
 
     host: string
@@ -15,11 +19,11 @@ class PostgreSql implements DriverInterfaz{
     pool: Pool
 
     constructor(){
-        this.host=(process.env.DB_HOST)? process.env.DB_HOST as string: ""
-        this.port=(process.env.DB_PORT)? process.env.DB_PORT as string: ""
-        this.db_name=(process.env.DB_NAME)? process.env.DB_NAME as string: ""
-        this.user=(process.env.DB_USER)? process.env.DB_USER as string: ""
-        this.pass=(process.env.DB_PASS)? process.env.DB_PASS as string: ""
+        this.host=(DB_HOST)? DB_HOST as string: ""
+        this.port=(DB_PORT)? DB_PORT as string: ""
+        this.db_name=(DB)? DB as string: ""
+        this.user=(DB_USER)? DB_USER as string: ""
+        this.pass=(DB_PASS)? DB_PASS as string: ""
         this.config={
             host: this.host,
             port: this.port,

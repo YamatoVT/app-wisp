@@ -4,20 +4,24 @@ import cors from "cors"
 import logger from "morgan"
 import dotEnv from "dotenv"
 dotEnv.config({ path: path.resolve(__dirname, '../.env') })
-// rutas 
+// import rutas 
 import RouterIp from "./rutas/ip/index"
 
+const {PORT} = process.env 
+
 let app=express()
-const puerto = process.env.PORT || 5000
+const puerto = PORT || 5000
+
 // set
 app.set("puerto",puerto)
 // middleware
 app.use(cors())
 app.use(logger("dev"))
 app.use(express.json())
-app.use(express.static(__dirname+"/upload"))
+app.use(express.static(path.resolve(__dirname, '../public')))
 
-
+// rutas
 app.use("/configuracion/ip",RouterIp)
+
 // export
 export = app

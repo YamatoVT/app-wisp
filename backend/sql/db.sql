@@ -1,4 +1,6 @@
-CREATE DATABASE wisp_db;
+-- CREATE DATABASE wisp_db; DB PRODUCCION
+
+-- CREATE DATABASE wisp_test_db; DB TEST
 
 CREATE TABLE tpersona(
     id_persona SERIAl,

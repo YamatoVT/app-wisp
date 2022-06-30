@@ -16,13 +16,15 @@ const pg_1 = require("pg");
 const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
 dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../.env') });
+let { DB_HOST, DB_PORT, DB_NAME_PRO, DB_NAME_DEV, DB_USER, DB_PASS, NODE_ENV } = process.env;
+let DB = (NODE_ENV === "test") ? DB_NAME_DEV : DB_NAME_PRO;
 class PostgreSql {
     constructor() {
-        this.host = (process.env.DB_HOST) ? process.env.DB_HOST : "";
-        this.port = (process.env.DB_PORT) ? process.env.DB_PORT : "";
-        this.db_name = (process.env.DB_NAME) ? process.env.DB_NAME : "";
-        this.user = (process.env.DB_USER) ? process.env.DB_USER : "";
-        this.pass = (process.env.DB_PASS) ? process.env.DB_PASS : "";
+        this.host = (DB_HOST) ? DB_HOST : "";
+        this.port = (DB_PORT) ? DB_PORT : "";
+        this.db_name = (DB) ? DB : "";
+        this.user = (DB_USER) ? DB_USER : "";
+        this.pass = (DB_PASS) ? DB_PASS : "";
         this.config = {
             host: this.host,
             port: this.port,
