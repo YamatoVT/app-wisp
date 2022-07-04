@@ -16,15 +16,50 @@ const postgresql_1 = __importDefault(require("../driver_db/postgresql"));
 const modelo_ip_1 = __importDefault(require("../modelos/modelo_ip"));
 let ControladorIp = {
     generarIps: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        const { ip_parte_1, ip_parte_2, host, desde, hasta } = req.body;
-        const FIN = hasta;
-        let listaIP = [];
-        for (let contador = desde; contador <= FIN; contador++) {
-            let ip = ip_parte_1 + "." + ip_parte_2 + "." + host + "." + contador;
-            listaIP.push(ip);
+        if (req.body.ip_parte_1 && req.body.ip_parte_2 && req.body.host && req.body.desde && req.body.hasta) {
+            const exprexion_1 = /[a-zA-Z]/g;
+            const exprexion_2 = /\s/g;
+            const { ip_parte_1, ip_parte_2, host, desde, hasta } = req.body;
+            if (!exprexion_1.test(ip_parte_1) && !exprexion_1.test(ip_parte_2) && !exprexion_1.test(host) && !exprexion_1.test(desde) && !exprexion_1.test(hasta)) {
+                if (!exprexion_2.test(ip_parte_1) && !exprexion_2.test(ip_parte_2) && !exprexion_2.test(host) && !exprexion_2.test(desde) && !exprexion_2.test(hasta)) {
+                    const FIN = hasta;
+                    let listaIP = [];
+                    for (let contador = desde; contador <= FIN; contador++) {
+                        let ip = ip_parte_1 + "." + ip_parte_2 + "." + host + "." + contador;
+                        listaIP.push(ip);
+                    }
+                    res.type("json");
+                    res.status(200).json({ lista_ips: listaIP });
+                }
+                else {
+                    let respuesta = {
+                        codigo_respuesta: "400",
+                        tipo_mensaje: "danger",
+                        mensaje_respuesta: "no se a procesado la solicitud por que no puede tener espacios en blanco"
+                    };
+                    res.type("json");
+                    res.status(400).json(respuesta);
+                }
+            }
+            else {
+                let respuesta = {
+                    codigo_respuesta: "400",
+                    tipo_mensaje: "danger",
+                    mensaje_respuesta: "no se a procesado la solicitud por que los datos enviados no son numericos"
+                };
+                res.type("json");
+                res.status(400).json(respuesta);
+            }
         }
-        res.type("json");
-        res.status(200).json({ lista_ips: listaIP });
+        else {
+            let respuesta = {
+                codigo_respuesta: "400",
+                tipo_mensaje: "danger",
+                mensaje_respuesta: "no se a procesado la solicitud por que falta uno de los sigueinte propiedades (ip_parte_1,ip_parte_2,host,desde,hasta)"
+            };
+            res.type("json");
+            res.status(400).json(respuesta);
+        }
     }),
     registrar: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         let estidoRegistro = true;
@@ -230,28 +265,50 @@ let ControladorIp = {
     validarExistenciaIpsEndPoint: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const DRIVER_POSTGRESQL = new postgresql_1.default();
         const CLIENTE = yield DRIVER_POSTGRESQL.conectar();
-        let { lista_ips } = req.body;
-        let LISTA_IP = lista_ips.map((direccion_ip) => {
-            const MODELO_IP = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
-            MODELO_IP.setIp = direccion_ip;
-            return MODELO_IP;
-        });
-        let { LISTA_IP_EXISTENTES, LISTA_IP_NO_EXISTENTES, LISTA_IP_2 } = yield ControladorIp.validarExistenciaIps(LISTA_IP);
-        yield DRIVER_POSTGRESQL.cerrarConexion(CLIENTE);
-        LISTA_IP = LISTA_IP_2;
-        res.type("json");
-        let respuesta = {
-            codigo_respuesta: "200",
-            tipo_mensaje: "success",
-            mensaje_respuesta: "soliciudad porcesada con exito",
-            datos_respuesta: {
-                lista_ip_existentes: LISTA_IP_EXISTENTES,
-                lista_ip_no_existentes: LISTA_IP_NO_EXISTENTES,
-                total_ip_existente: LISTA_IP_EXISTENTES.length,
-                total_ip_no_existente: LISTA_IP_NO_EXISTENTES.length
+        if (req.body.lista_ips) {
+            let { lista_ips } = req.body;
+            if (Object.getPrototypeOf(lista_ips) === Array.prototype) {
+                let LISTA_IP = lista_ips.map((direccion_ip) => {
+                    const MODELO_IP = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
+                    MODELO_IP.setIp = direccion_ip;
+                    return MODELO_IP;
+                });
+                let { LISTA_IP_EXISTENTES, LISTA_IP_NO_EXISTENTES, LISTA_IP_2 } = yield ControladorIp.validarExistenciaIps(LISTA_IP);
+                yield DRIVER_POSTGRESQL.cerrarConexion(CLIENTE);
+                LISTA_IP = LISTA_IP_2;
+                res.type("json");
+                let respuesta = {
+                    codigo_respuesta: "200",
+                    tipo_mensaje: "success",
+                    mensaje_respuesta: "soliciudad porcesada con exito",
+                    datos_respuesta: {
+                        lista_ip_existentes: LISTA_IP_EXISTENTES,
+                        lista_ip_no_existentes: LISTA_IP_NO_EXISTENTES,
+                        total_ip_existente: LISTA_IP_EXISTENTES.length,
+                        total_ip_no_existente: LISTA_IP_NO_EXISTENTES.length
+                    }
+                };
+                res.status(200).json(respuesta);
             }
-        };
-        res.status(200).json(respuesta);
+            else {
+                let respuesta = {
+                    codigo_respuesta: "400",
+                    tipo_mensaje: "danger",
+                    mensaje_respuesta: "no se a procesado la solicitud por que falta la propiedad lista_ips no fue pasado como un array fue pasado como un " + Object.getPrototypeOf(lista_ips)
+                };
+                res.type("json");
+                res.status(400).json(respuesta);
+            }
+        }
+        else {
+            let respuesta = {
+                codigo_respuesta: "400",
+                tipo_mensaje: "danger",
+                mensaje_respuesta: "no se a procesado la solicitud por que falta la propiedad lista_ips"
+            };
+            res.type("json");
+            res.status(400).json(respuesta);
+        }
     }),
     validarExistenciaIps: (LISTA_IP) => __awaiter(void 0, void 0, void 0, function* () {
         const LISTA_IP_EXISTENTES = [];
@@ -274,19 +331,5 @@ let ControladorIp = {
             LISTA_IP_2: LISTA_IP
         };
     }),
-    validarExistenciaIp: (modeloIp) => __awaiter(void 0, void 0, void 0, function* () {
-        let result = yield modeloIp.consultarPorIp();
-        return (result.rowCount > 0) ? true : false;
-    }),
-    obtenerContratoPorIp: function (req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-        });
-    }
-    // validarDisponivilidadIps: async () => {
-    // },
-    // validarDisponivilidadIp: async (modeloIp:ModeloIp):Promise<boolean>=> {
-    //     let result:QueryResult=await modeloIp.consultarPorId()
-    //     return (result.rowCount>0)? true: false
-    // },
 };
 exports.default = ControladorIp;

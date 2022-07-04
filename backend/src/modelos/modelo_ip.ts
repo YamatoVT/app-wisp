@@ -99,6 +99,11 @@ class ModeloIp implements interfaz_modelo_ip {
         return await this.DrivePostgreSql.query(this.cliente,SQL)
     }
 
+    async EliminarDatos(){
+        const SQL:string="DELETE FROM tip"
+        return await this.DrivePostgreSql.query(this.cliente,SQL)
+    }
+
 
 }
 

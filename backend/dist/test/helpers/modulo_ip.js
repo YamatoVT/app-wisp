@@ -3,11 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.helperModuloIp = exports.appTest = void 0;
+exports.helperModuloIp = exports.api = void 0;
 const index_1 = require("../../index");
 const supertest_1 = __importDefault(require("supertest"));
-let appTest = (0, supertest_1.default)(index_1.app);
-exports.appTest = appTest;
+let api = (0, supertest_1.default)(index_1.app);
+exports.api = api;
 let datosIps = [
     {
         id_ip: 1,
@@ -36,6 +36,9 @@ let datosIps = [
     }
 ];
 let helperModuloIp = {
-    datos: datosIps
+    datos: datosIps,
+    obtenerSoloIps: () => {
+        return helperModuloIp.datos.map(ip => ip.ip);
+    }
 };
 exports.helperModuloIp = helperModuloIp;

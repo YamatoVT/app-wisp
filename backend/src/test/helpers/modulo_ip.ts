@@ -3,7 +3,7 @@ import supertest from "supertest"
 // 
 import interfaz_modelo_ip from "../../interfaz/modelo/interfaz_modelo_ip"
 
-let appTest = supertest(app)
+let api = supertest(app)
 
 let datosIps:interfaz_modelo_ip[]=[
     {
@@ -34,11 +34,15 @@ let datosIps:interfaz_modelo_ip[]=[
 ]
 
 
-let helperModuloIp:Object={
-    datos:datosIps
+let helperModuloIp={
+    datos:datosIps,
+
+    obtenerSoloIps:():string[] => {
+        return helperModuloIp.datos.map(ip => ip.ip)
+    }
 }
 
 export {
-    appTest,
+    api,
     helperModuloIp
 }

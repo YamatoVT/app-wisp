@@ -95,5 +95,11 @@ class ModeloIp {
             return yield this.DrivePostgreSql.query(this.cliente, SQL);
         });
     }
+    EliminarDatos() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const SQL = "DELETE FROM tip";
+            return yield this.DrivePostgreSql.query(this.cliente, SQL);
+        });
+    }
 }
 exports.default = ModeloIp;
