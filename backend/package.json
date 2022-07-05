@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=dev node ./dist/index.js",
     "start": "cross-env NODE_ENV=start node ./dist/index.js",
-    "test": "cross-env NODE_ENV=test jest ./dist --verbose ",
+    "test": "cross-env NODE_ENV=test jest ./dist --verbose --detectOpenHandles ",
     "test:watch": "npm run test -- --watch",
     "ts": "tsc -w "
   },

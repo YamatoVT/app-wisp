@@ -88,12 +88,12 @@ let ControladorIp = {
         }
         if (estidoRegistro === ERROR) {
             let respuesta = {
-                codigo_respuesta: "500",
+                codigo_respuesta: "400",
                 tipo_mensaje: "danger",
-                mensaje_respuesta: "sucedio un error consulte a sistema"
+                mensaje_respuesta: "sucedio un error al registrar, consulte a sistema"
             };
             res.type("json");
-            res.status(500).json(respuesta);
+            res.status(400).json(respuesta);
         }
     }),
     consultarEndPointNext: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -134,12 +134,12 @@ let ControladorIp = {
         }
         else {
             let respuesta = {
-                codigo_respuesta: "200",
+                codigo_respuesta: "400",
                 tipo_mensaje: "danger",
                 mensaje_respuesta: "la ip no esta registrar en la base de datos",
             };
             res.type("json");
-            res.status(200).json(respuesta);
+            res.status(400).json(respuesta);
         }
     }),
     consultar: (id, DRIVER_POSTGRESQL, CLIENTE) => __awaiter(void 0, void 0, void 0, function* () {
@@ -234,32 +234,54 @@ let ControladorIp = {
     validarExistenciaIpsEndPointNext: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         const DRIVER_POSTGRESQL = new postgresql_1.default();
         const CLIENTE = yield DRIVER_POSTGRESQL.conectar();
-        let { lista_ips } = req.body;
-        let LISTA_IP = lista_ips.map((direccion_ip) => {
-            const MODELO_IP = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
-            MODELO_IP.setIp = direccion_ip;
-            return MODELO_IP;
-        });
-        let { LISTA_IP_EXISTENTES, LISTA_IP_NO_EXISTENTES, LISTA_IP_2 } = yield ControladorIp.validarExistenciaIps(LISTA_IP);
-        // await DRIVER_POSTGRESQL.cerrarConexion(CLIENTE)
-        const CANTIDAD_PERMITIDA = 0;
-        if (LISTA_IP_EXISTENTES.length == CANTIDAD_PERMITIDA) {
-            req.body.lista_ips = LISTA_IP_2;
-            req.body["DRIVER_POSTGRESQL"] = DRIVER_POSTGRESQL;
-            req.body["CLIENTE"] = CLIENTE;
-            next();
+        if (req.body.lista_ips) {
+            let { lista_ips } = req.body;
+            if (Object.getPrototypeOf(lista_ips) === Array.prototype) {
+                let LISTA_IP = lista_ips.map((direccion_ip) => {
+                    const MODELO_IP = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
+                    MODELO_IP.setIp = direccion_ip;
+                    return MODELO_IP;
+                });
+                let { LISTA_IP_EXISTENTES, LISTA_IP_NO_EXISTENTES, LISTA_IP_2 } = yield ControladorIp.validarExistenciaIps(LISTA_IP);
+                // await DRIVER_POSTGRESQL.cerrarConexion(CLIENTE)
+                const CANTIDAD_PERMITIDA = 0;
+                if (LISTA_IP_EXISTENTES.length == CANTIDAD_PERMITIDA) {
+                    req.body.lista_ips = LISTA_IP_2;
+                    req.body["DRIVER_POSTGRESQL"] = DRIVER_POSTGRESQL;
+                    req.body["CLIENTE"] = CLIENTE;
+                    next();
+                }
+                else {
+                    res.type("json");
+                    let respuesta = {
+                        codigo_respuesta: "200",
+                        tipo_mensaje: "warning",
+                        mensaje_respuesta: "no se pudo procesar su solicitud de registro por el siguiente motivo, no se pueden volver a registrar ips que ya estan registrar",
+                        datos_respuesta: {
+                            lista_ip_existentes: LISTA_IP_EXISTENTES,
+                        }
+                    };
+                    res.status(200).json(respuesta);
+                }
+            }
+            else {
+                let respuesta = {
+                    codigo_respuesta: "400",
+                    tipo_mensaje: "danger",
+                    mensaje_respuesta: "no se a procesado la solicitud por que falta la propiedad lista_ips no fue pasado como un array fue pasado como un " + Object.getPrototypeOf(lista_ips)
+                };
+                res.type("json");
+                res.status(400).json(respuesta);
+            }
         }
         else {
             res.type("json");
             let respuesta = {
-                codigo_respuesta: "200",
+                codigo_respuesta: "400",
                 tipo_mensaje: "warning",
-                mensaje_respuesta: "no se pudo procesar su solicitud de registro por el siguiente motivo, no se pueden volver a registrar ips que ya estan registrar",
-                datos_respuesta: {
-                    lista_ip_existentes: LISTA_IP_EXISTENTES,
-                }
+                mensaje_respuesta: "no se a procesado la solicitud por que falta la propiedad lista_ips",
             };
-            res.status(200).json(respuesta);
+            res.status(400).json(respuesta);
         }
     }),
     validarExistenciaIpsEndPoint: (req, res) => __awaiter(void 0, void 0, void 0, function* () {

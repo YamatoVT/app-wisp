@@ -13,10 +13,7 @@ beforeEach(async () => {
     await modeloIp.EliminarDatos()
     await modeloIp.resetiarIdTabla()
     DRIVER_POSTGRESQL.cerrarConexion(CLIENTE)
-})
-
-afterAll(() => {
-    servidor.close()
+    await helperModuloIp.precargarDatos()
 })
 
 describe("pruebas End Point del modulo IP",() => {
@@ -39,7 +36,7 @@ describe("pruebas End Point del modulo IP",() => {
         let respuestaApi:Response=await api.post("/configuracion/ip/generar-ip")
         .send()
         .expect(400)
-        expect(respuestaApi.body.codigo_respuesta).toBe("400")
+        expect("400").toBe(respuestaApi.body.codigo_respuesta)
     })
 
     test("generar ips pero pasando texto tiene que arrojar un error 400",async () => {
@@ -53,7 +50,7 @@ describe("pruebas End Point del modulo IP",() => {
         let respuestaApi:Response=await api.post("/configuracion/ip/generar-ip")
         .send(datosGenerar)
         .expect(400)
-        expect(respuestaApi.body.codigo_respuesta).toBe("400")
+        expect("400").toBe(respuestaApi.body.codigo_respuesta)
     })
     // =======
     // =======
@@ -64,22 +61,64 @@ describe("pruebas End Point del modulo IP",() => {
         const respuestaApi:Response=await api.post("/configuracion/ip/validar-exitencia-ips")
         .send({lista_ips:[]})
         .expect(200)
-        expect(respuestaApi.body.codigo_respuesta).toBe("200")
+        expect("200").toBe(respuestaApi.body.codigo_respuesta)
     })
 
     test("validar existencia ips pasando en ves de un array un string vacio",async () => {
         const respuestaApi:Response=await api.post("/configuracion/ip/validar-exitencia-ips")
         .send({lista_ips:""})
         .expect(400)
-        expect(respuestaApi.body.codigo_respuesta).toBe("400")
+        expect("400").toBe(respuestaApi.body.codigo_respuesta)
     })
 
     test("validar existencia ips sin pasar la propiedad ",async () => {
         const respuestaApi:Response=await api.post("/configuracion/ip/validar-exitencia-ips")
         .expect(400)
+        expect("400").toBe(respuestaApi.body.codigo_respuesta)
+    })
+    // =======
+    // =======
+    // =======
+    test("registrar ip",async () => {
+        const ipTest=helperModuloIp.ipTestRegistro
+        const respuestaApi:Response=await api.post("/configuracion/ip/registrar")
+        .send({lista_ips:[ipTest.ip]})
+        .expect(200)
+    })
+    test("registrar ip sin enviar datos",async () => {
+        const respuestaApi:Response=await api.post("/configuracion/ip/registrar")
+        .expect(400)
         expect(respuestaApi.body.codigo_respuesta).toBe("400")
+    })
+    test("registrar ip enviando un string",async () => {
+        const ipTest=helperModuloIp.ipTestRegistro
+        const respuestaApi:Response=await api.post("/configuracion/ip/registrar")
+        .send({lista_ips:""})
+        .expect(400)
+        expect(respuestaApi.body.codigo_respuesta).toBe("400")
+    })
+    // =======
+    // =======
+    // =======
+    test("consultar una ip por el id",async () => {
+        const ipTest=helperModuloIp.datos[0]
+        const respuestaApi:Response= await api.get("/configuracion/ip/consultar/"+ipTest.id_ip)
+        .expect(200)
+        const ipRespuesta=respuestaApi.body.datos_respuesta
+        expect("200").toBe(respuestaApi.body.codigo_respuesta)
+        expect(ipTest.id_ip).toEqual(ipRespuesta.id_ip)
+    })
+
+    test("consultar una ip por el id el recuros no fue encontrado",async () => {
+        const ipTest=helperModuloIp.datos[0]
+        const respuestaApi:Response= await api.get("/configuracion/ip/consultar/666")
+        .expect(400)
+        const ipRespuesta=respuestaApi.body
+        expect("400").toBe(ipRespuesta.codigo_respuesta)
     })
 
 })
 
-
+afterAll(() => {
+    servidor.close()
+})
