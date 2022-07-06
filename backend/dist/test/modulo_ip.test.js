@@ -8,22 +8,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("../index");
 const modulo_ip_1 = require("./helpers/modulo_ip");
-const postgresql_1 = __importDefault(require("../driver_db/postgresql"));
-const modelo_ip_1 = __importDefault(require("../modelos/modelo_ip"));
 beforeEach(() => __awaiter(void 0, void 0, void 0, function* () {
-    const DRIVER_POSTGRESQL = new postgresql_1.default();
-    const CLIENTE = yield DRIVER_POSTGRESQL.conectar();
-    const modeloIp = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
-    yield modeloIp.EliminarDatos();
-    yield modeloIp.resetiarIdTabla();
-    DRIVER_POSTGRESQL.cerrarConexion(CLIENTE);
-    yield modulo_ip_1.helperModuloIp.precargarDatos();
+    let cerrarConexion = yield modulo_ip_1.helperModuloIp.precargarDatos();
+    yield cerrarConexion();
 }));
 describe("pruebas End Point del modulo IP", () => {
     test("generar ips y devolvera 5 ip", () => __awaiter(void 0, void 0, void 0, function* () {
@@ -37,13 +27,13 @@ describe("pruebas End Point del modulo IP", () => {
         let respuestaApi = yield modulo_ip_1.api.post("/configuracion/ip/generar-ip")
             .send(datosGenerar)
             .expect(200);
-        expect(modulo_ip_1.helperModuloIp.datos.length).toBe(respuestaApi.body.lista_ips.length);
+        expect(respuestaApi.body.lista_ips.length).toBe(modulo_ip_1.helperModuloIp.datos.length);
     }));
     test("generar ips sin enviar datos tiene que arrojar un error 400", () => __awaiter(void 0, void 0, void 0, function* () {
         let respuestaApi = yield modulo_ip_1.api.post("/configuracion/ip/generar-ip")
             .send()
             .expect(400);
-        expect("400").toBe(respuestaApi.body.codigo_respuesta);
+        expect(respuestaApi.body.codigo_respuesta).toBe("400");
     }));
     test("generar ips pero pasando texto tiene que arrojar un error 400", () => __awaiter(void 0, void 0, void 0, function* () {
         let datosGenerar = {
@@ -56,7 +46,7 @@ describe("pruebas End Point del modulo IP", () => {
         let respuestaApi = yield modulo_ip_1.api.post("/configuracion/ip/generar-ip")
             .send(datosGenerar)
             .expect(400);
-        expect("400").toBe(respuestaApi.body.codigo_respuesta);
+        expect(respuestaApi.body.codigo_respuesta).toBe("400");
     }));
     // =======
     // =======
@@ -67,18 +57,18 @@ describe("pruebas End Point del modulo IP", () => {
         const respuestaApi = yield modulo_ip_1.api.post("/configuracion/ip/validar-exitencia-ips")
             .send({ lista_ips: [] })
             .expect(200);
-        expect("200").toBe(respuestaApi.body.codigo_respuesta);
+        expect(respuestaApi.body.codigo_respuesta).toBe("200");
     }));
     test("validar existencia ips pasando en ves de un array un string vacio", () => __awaiter(void 0, void 0, void 0, function* () {
         const respuestaApi = yield modulo_ip_1.api.post("/configuracion/ip/validar-exitencia-ips")
             .send({ lista_ips: "" })
             .expect(400);
-        expect("400").toBe(respuestaApi.body.codigo_respuesta);
+        expect(respuestaApi.body.codigo_respuesta).toBe("400");
     }));
     test("validar existencia ips sin pasar la propiedad ", () => __awaiter(void 0, void 0, void 0, function* () {
         const respuestaApi = yield modulo_ip_1.api.post("/configuracion/ip/validar-exitencia-ips")
             .expect(400);
-        expect("400").toBe(respuestaApi.body.codigo_respuesta);
+        expect(respuestaApi.body.codigo_respuesta).toBe("400");
     }));
     // =======
     // =======
@@ -88,6 +78,7 @@ describe("pruebas End Point del modulo IP", () => {
         const respuestaApi = yield modulo_ip_1.api.post("/configuracion/ip/registrar")
             .send({ lista_ips: [ipTest.ip] })
             .expect(200);
+        expect(respuestaApi.body.codigo_respuesta).toBe("200");
     }));
     test("registrar ip sin enviar datos", () => __awaiter(void 0, void 0, void 0, function* () {
         const respuestaApi = yield modulo_ip_1.api.post("/configuracion/ip/registrar")
@@ -110,14 +101,56 @@ describe("pruebas End Point del modulo IP", () => {
             .expect(200);
         const ipRespuesta = respuestaApi.body.datos_respuesta;
         expect("200").toBe(respuestaApi.body.codigo_respuesta);
-        expect(ipTest.id_ip).toEqual(ipRespuesta.id_ip);
+        expect(ipRespuesta.id_ip).toEqual(ipTest.id_ip);
     }));
     test("consultar una ip por el id el recuros no fue encontrado", () => __awaiter(void 0, void 0, void 0, function* () {
         const ipTest = modulo_ip_1.helperModuloIp.datos[0];
         const respuestaApi = yield modulo_ip_1.api.get("/configuracion/ip/consultar/666")
             .expect(400);
         const ipRespuesta = respuestaApi.body;
-        expect("400").toBe(ipRespuesta.codigo_respuesta);
+        expect(ipRespuesta.codigo_respuesta).toBe("400");
+    }));
+    // =======
+    // =======
+    // =======
+    test("consultar todo tiene que devolver 5", () => __awaiter(void 0, void 0, void 0, function* () {
+        // helperModuloIp.datos
+        const respuestaApi = yield modulo_ip_1.api.get("/configuracion/ip/consultar-todos")
+            .expect(200);
+        const ipRespuesta = respuestaApi.body;
+        expect("200").toBe(ipRespuesta.codigo_respuesta);
+        expect(ipRespuesta.datos_respuesta.length).toBe(modulo_ip_1.helperModuloIp.datos.length);
+    }));
+    // =======
+    // =======
+    // =======
+    test("actualizar registo tiene que actualizar el registro con id 1", () => __awaiter(void 0, void 0, void 0, function* () {
+        let ipTest = modulo_ip_1.helperModuloIp.datos[0];
+        ipTest.ip = "192.168.1.11";
+        const respuestaApi = yield modulo_ip_1.api.put("/configuracion/ip/actualizar-direccion/" + ipTest.id_ip)
+            .send({ ip: ipTest.ip })
+            .expect(200);
+        const ipRespuesta = respuestaApi.body;
+        expect(ipRespuesta.codigo_respuesta).toBe("200");
+    }));
+    test("actualizar un registo que no existe 666", () => __awaiter(void 0, void 0, void 0, function* () {
+        let idIpNoexiste = "666";
+        let ip = "192.168.1.666";
+        const respuestaApi = yield modulo_ip_1.api.put("/configuracion/ip/actualizar-direccion/" + idIpNoexiste)
+            .send({ ip: ip })
+            .expect(404);
+        const ipRespuesta = respuestaApi.body;
+        expect(ipRespuesta.codigo_respuesta).toBe("404");
+    }));
+    test("actualizar registo tiene que actualizar el registro con id 1 pero sin pasr una ip", () => __awaiter(void 0, void 0, void 0, function* () {
+        let ipTest = modulo_ip_1.helperModuloIp.datos[0];
+        ipTest.ip = "";
+        const respuestaApi = yield modulo_ip_1.api.put("/configuracion/ip/actualizar-direccion/" + ipTest.id_ip)
+            .send({ ip: ipTest.ip })
+            .expect(400);
+        const ipRespuesta = respuestaApi.body;
+        console.log(ipRespuesta);
+        expect(ipRespuesta.codigo_respuesta).toBe("400");
     }));
 });
 afterAll(() => {

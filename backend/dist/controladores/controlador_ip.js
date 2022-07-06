@@ -98,10 +98,11 @@ let ControladorIp = {
     }),
     consultarEndPointNext: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         const { id } = req.params;
+        const { ip } = req.body;
         const DRIVER_POSTGRESQL = new postgresql_1.default();
         const CLIENTE = yield DRIVER_POSTGRESQL.conectar();
-        let ip = yield ControladorIp.consultar(id, DRIVER_POSTGRESQL, CLIENTE);
-        if (ip.length > 0) {
+        let modeloip = yield ControladorIp.consultar(id, DRIVER_POSTGRESQL, CLIENTE);
+        if (modeloip.length > 0) {
             req.body["DRIVER_POSTGRESQL"] = DRIVER_POSTGRESQL;
             req.body["CLIENTE"] = CLIENTE;
             next();
@@ -113,7 +114,7 @@ let ControladorIp = {
                 mensaje_respuesta: "la ip no esta registrar en la base de datos",
             };
             res.type("json");
-            res.status(200).json(respuesta);
+            res.status(404).json(respuesta);
         }
     }),
     consultarEndPoint: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -207,28 +208,40 @@ let ControladorIp = {
     actualizarDireccion: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const { id } = req.params;
         const { ip, DRIVER_POSTGRESQL, CLIENTE } = req.body;
-        const MODELO_IP = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
-        MODELO_IP.setIdIp = id;
-        MODELO_IP.setIp = ip;
-        let result = yield MODELO_IP.actualizarDireccion();
-        yield DRIVER_POSTGRESQL.cerrarConexion(CLIENTE);
-        if (result.rowCount > 0) {
-            let respuesta = {
-                codigo_respuesta: "200",
-                tipo_mensaje: "success",
-                mensaje_respuesta: "actualizacion completada"
-            };
-            res.type("json");
-            res.status(200).json(respuesta);
+        let exprexion_1 = /\s/g;
+        if (!exprexion_1.test(ip) && ip !== "") {
+            const MODELO_IP = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
+            MODELO_IP.setIdIp = id;
+            MODELO_IP.setIp = ip;
+            let result = yield MODELO_IP.actualizarDireccion();
+            yield DRIVER_POSTGRESQL.cerrarConexion(CLIENTE);
+            if (result.rowCount > 0) {
+                let respuesta = {
+                    codigo_respuesta: "200",
+                    tipo_mensaje: "success",
+                    mensaje_respuesta: "actualizacion completada"
+                };
+                res.type("json");
+                res.status(200).json(respuesta);
+            }
+            else {
+                let respuesta = {
+                    codigo_respuesta: "400",
+                    tipo_mensaje: "danger",
+                    mensaje_respuesta: "error al actualizar la direccion ip",
+                };
+                res.type("json");
+                res.status(400).json(respuesta);
+            }
         }
         else {
             let respuesta = {
-                codigo_respuesta: "200",
+                codigo_respuesta: "400",
                 tipo_mensaje: "danger",
-                mensaje_respuesta: "error al actualizar la direccion ip",
+                mensaje_respuesta: "error al actualizar la direccion ip por que intento pasar el atributo basio",
             };
             res.type("json");
-            res.status(200).json(respuesta);
+            res.status(400).json(respuesta);
         }
     }),
     validarExistenciaIpsEndPointNext: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {

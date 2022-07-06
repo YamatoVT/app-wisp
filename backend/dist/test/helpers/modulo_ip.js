@@ -15,6 +15,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.helperModuloIp = exports.api = void 0;
 const index_1 = require("../../index");
 const supertest_1 = __importDefault(require("supertest"));
+// 
+const postgresql_1 = __importDefault(require("../../driver_db/postgresql"));
+const modelo_ip_1 = __importDefault(require("../../modelos/modelo_ip"));
 let api = (0, supertest_1.default)(index_1.app);
 exports.api = api;
 let datosIps = [
@@ -64,9 +67,25 @@ let helperModuloIp = {
         return respuestaApi.body.datos_respuesta;
     }),
     precargarDatos: () => __awaiter(void 0, void 0, void 0, function* () {
-        const respuestaApi = yield api.post("/configuracion/ip/registrar")
-            .send({ lista_ips: helperModuloIp.obtenerSoloIps() });
-        return respuestaApi.body;
+        const DRIVER_POSTGRESQL = new postgresql_1.default();
+        const CLIENTE = yield DRIVER_POSTGRESQL.conectar();
+        yield helperModuloIp.resetiarTabla(DRIVER_POSTGRESQL, CLIENTE);
+        let lista_ip = helperModuloIp.datos.map((datosIp) => {
+            let ip = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
+            ip.setDatos = datosIp;
+            return ip;
+        });
+        for (const ip of lista_ip) {
+            yield ip.registrar();
+        }
+        return () => __awaiter(void 0, void 0, void 0, function* () {
+            yield DRIVER_POSTGRESQL.cerrarConexion(CLIENTE);
+        });
+    }),
+    resetiarTabla: (DRIVER_POSTGRESQL, CLIENTE) => __awaiter(void 0, void 0, void 0, function* () {
+        let modeloIp = new modelo_ip_1.default(DRIVER_POSTGRESQL, CLIENTE);
+        yield modeloIp.EliminarDatos();
+        yield modeloIp.resetiarIdTabla();
     })
 };
 exports.helperModuloIp = helperModuloIp;

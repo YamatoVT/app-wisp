@@ -1,19 +1,11 @@
 import {servidor} from "../index"
 import {api,helperModuloIp} from "./helpers/modulo_ip"
-import PostgresSql from "../driver_db/postgresql"
-import { PoolClient } from "pg"
-import ModeloIp from "../modelos/modelo_ip"
 import { Response } from "supertest"
 
 
 beforeEach(async () => {
-    const DRIVER_POSTGRESQL:PostgresSql=new PostgresSql()
-    const CLIENTE:PoolClient=await DRIVER_POSTGRESQL.conectar()
-    const modeloIp:ModeloIp = new ModeloIp(DRIVER_POSTGRESQL,CLIENTE)
-    await modeloIp.EliminarDatos()
-    await modeloIp.resetiarIdTabla()
-    DRIVER_POSTGRESQL.cerrarConexion(CLIENTE)
-    await helperModuloIp.precargarDatos()
+    let cerrarConexion=await helperModuloIp.precargarDatos()
+    await cerrarConexion()
 })
 
 describe("pruebas End Point del modulo IP",() => {
@@ -29,14 +21,14 @@ describe("pruebas End Point del modulo IP",() => {
         let respuestaApi:Response=await api.post("/configuracion/ip/generar-ip")
         .send(datosGenerar)
         .expect(200)
-        expect(helperModuloIp.datos.length).toBe(respuestaApi.body.lista_ips.length)
+        expect(respuestaApi.body.lista_ips.length).toBe(helperModuloIp.datos.length)
     })
 
     test("generar ips sin enviar datos tiene que arrojar un error 400",async () => {
         let respuestaApi:Response=await api.post("/configuracion/ip/generar-ip")
         .send()
         .expect(400)
-        expect("400").toBe(respuestaApi.body.codigo_respuesta)
+        expect(respuestaApi.body.codigo_respuesta).toBe("400")
     })
 
     test("generar ips pero pasando texto tiene que arrojar un error 400",async () => {
@@ -50,7 +42,7 @@ describe("pruebas End Point del modulo IP",() => {
         let respuestaApi:Response=await api.post("/configuracion/ip/generar-ip")
         .send(datosGenerar)
         .expect(400)
-        expect("400").toBe(respuestaApi.body.codigo_respuesta)
+        expect(respuestaApi.body.codigo_respuesta).toBe("400")
     })
     // =======
     // =======
@@ -61,20 +53,20 @@ describe("pruebas End Point del modulo IP",() => {
         const respuestaApi:Response=await api.post("/configuracion/ip/validar-exitencia-ips")
         .send({lista_ips:[]})
         .expect(200)
-        expect("200").toBe(respuestaApi.body.codigo_respuesta)
+        expect(respuestaApi.body.codigo_respuesta).toBe("200")
     })
 
     test("validar existencia ips pasando en ves de un array un string vacio",async () => {
         const respuestaApi:Response=await api.post("/configuracion/ip/validar-exitencia-ips")
         .send({lista_ips:""})
         .expect(400)
-        expect("400").toBe(respuestaApi.body.codigo_respuesta)
+        expect(respuestaApi.body.codigo_respuesta).toBe("400")
     })
 
     test("validar existencia ips sin pasar la propiedad ",async () => {
         const respuestaApi:Response=await api.post("/configuracion/ip/validar-exitencia-ips")
         .expect(400)
-        expect("400").toBe(respuestaApi.body.codigo_respuesta)
+        expect(respuestaApi.body.codigo_respuesta).toBe("400")
     })
     // =======
     // =======
@@ -84,6 +76,7 @@ describe("pruebas End Point del modulo IP",() => {
         const respuestaApi:Response=await api.post("/configuracion/ip/registrar")
         .send({lista_ips:[ipTest.ip]})
         .expect(200)
+        expect(respuestaApi.body.codigo_respuesta).toBe("200")
     })
     test("registrar ip sin enviar datos",async () => {
         const respuestaApi:Response=await api.post("/configuracion/ip/registrar")
@@ -106,7 +99,7 @@ describe("pruebas End Point del modulo IP",() => {
         .expect(200)
         const ipRespuesta=respuestaApi.body.datos_respuesta
         expect("200").toBe(respuestaApi.body.codigo_respuesta)
-        expect(ipTest.id_ip).toEqual(ipRespuesta.id_ip)
+        expect(ipRespuesta.id_ip).toEqual(ipTest.id_ip)
     })
 
     test("consultar una ip por el id el recuros no fue encontrado",async () => {
@@ -114,7 +107,51 @@ describe("pruebas End Point del modulo IP",() => {
         const respuestaApi:Response= await api.get("/configuracion/ip/consultar/666")
         .expect(400)
         const ipRespuesta=respuestaApi.body
-        expect("400").toBe(ipRespuesta.codigo_respuesta)
+        expect(ipRespuesta.codigo_respuesta).toBe("400")
+    })
+    // =======
+    // =======
+    // =======
+    test("consultar todo tiene que devolver 5",async () => {
+        // helperModuloIp.datos
+        const respuestaApi:Response= await api.get("/configuracion/ip/consultar-todos")
+        .expect(200)
+        const ipRespuesta=respuestaApi.body
+        expect("200").toBe(ipRespuesta.codigo_respuesta)
+        expect(ipRespuesta.datos_respuesta.length).toBe(helperModuloIp.datos.length)
+    })
+    // =======
+    // =======
+    // =======
+    test("actualizar registo tiene que actualizar el registro con id 1",async () => {
+        let ipTest=helperModuloIp.datos[0]
+        ipTest.ip="192.168.1.11"
+        const respuestaApi:Response= await api.put("/configuracion/ip/actualizar-direccion/"+ipTest.id_ip)
+        .send({ip:ipTest.ip})
+        .expect(200)
+        const ipRespuesta=respuestaApi.body
+        expect(ipRespuesta.codigo_respuesta).toBe("200")
+    })
+
+    test("actualizar un registo que no existe 666",async () => {
+        let idIpNoexiste:string="666"
+        let ip="192.168.1.666"
+        const respuestaApi:Response= await api.put("/configuracion/ip/actualizar-direccion/"+idIpNoexiste)
+        .send({ip:ip})
+        .expect(404)
+        const ipRespuesta=respuestaApi.body
+        expect(ipRespuesta.codigo_respuesta).toBe("404")
+    })
+
+    test("actualizar registo tiene que actualizar el registro con id 1 pero sin pasr una ip",async () => {
+        let ipTest=helperModuloIp.datos[0]
+        ipTest.ip=""
+        const respuestaApi:Response= await api.put("/configuracion/ip/actualizar-direccion/"+ipTest.id_ip)
+        .send({ip:ipTest.ip})
+        .expect(400)
+        const ipRespuesta=respuestaApi.body
+        console.log(ipRespuesta)
+        expect(ipRespuesta.codigo_respuesta).toBe("400")
     })
 
 })
